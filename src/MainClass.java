@@ -10,42 +10,32 @@ public class MainClass {
             String calibrationPath = "./src/files/calibration.mdrs";
             double[] calibrationData = getData(calibrationPath);
 
-            File data_only = new File("./src/data_only");
-            data_only.mkdir();
-            File calibrated = new File("./src/calibrated");
-            calibrated.mkdir();
+            new File("./src/not_adjusted").mkdir();
+            new File("./src/sensitivity_adjusted").mkdir();
+            new File("./src/spectrum_adjusted").mkdir();
 
             File spectrometer = new File("./src/files/spectrometer");
             List<File> spectrometerFoldersList = Arrays.asList(spectrometer.listFiles());
             List<File> spectrometerFilesList;
-            String filePath;
+            String folderName;
+            String fileName;
             for (File folder : spectrometerFoldersList) {
-                new File("./src/data_only/" + folder.getName()).mkdir();
-                new File("./src/calibrated/" + folder.getName()).mkdir();
+                folderName = folder.getName();
+                new File("./src/not_adjusted/" + folderName).mkdir();
+                new File("./src/sensitivity_adjusted/" + folderName).mkdir();
+                new File("./src/spectrum_adjusted/" + folderName).mkdir();
                 spectrometerFilesList = Arrays.asList(folder.listFiles());
                 for (File file : spectrometerFilesList) {
-                    filePath = file.getPath();
-                    double[] fileData = getData(filePath);
-                    writeData("./src/data_only/" + folder.getName() + "/" + file.getName(), fileData);
-                    writeData("./src/calibrated/" + folder.getName() + "/" + file.getName(), fileData);
+                    fileName = file.getName();
+                    double[] fileData = getData(file.getPath());
+                    writeData("./src/not_adjusted/" + folderName + "/" + fileName, fileData);
+                    double[] sensitivityAdjustedData = sensitivityAdj(fileName, removeNoise(fileData));
+                    writeData("./src/sensitivity_adjusted/" + folderName + "/" + fileName, sensitivityAdjustedData);
+                    writeData("./src/spectrum_adjusted/" + folderName + "/" + fileName, sensitivityAdjustedData);
                 }
             }
         }
         catch (Exception e) { }
-    }
-
-    public static double[] sensibilityAdj(String path, double[] data) {
-        Matcher m = Pattern.compile("\\d+mv").matcher(path);
-        String stringSens;
-        int sens = 0;
-        while (m.find()) {
-            stringSens = m.group();
-            sens = Integer.parseInt(stringSens.substring(0, stringSens.length() - 2));
-        }
-        for (int i = 0; i < data.length; i++) {
-            data[i] = data[i] * sens;
-        }
-        return data;
     }
 
     public static double[] getData(String path) throws IOException {
@@ -70,7 +60,30 @@ public class MainClass {
         for (int i = 0; i < data.length; i++)
             out.write("" + data[i] + "\n");
         out.flush();
+    }
 
+    public static double[] removeNoise(double[] data) {
+        double min = 0;
+        for (int i = 0; i < data.length; i++)
+            if (data[i] < min)
+                min = data[i];
+        for (int i = 0; i < data.length; i++)
+            data[i] -= min;
+        return data;
+    }
+
+    public static double[] sensitivityAdj(String name, double[] data) {
+        Matcher m = Pattern.compile("\\d+mv").matcher(name);
+        String stringSens;
+        int sens = 0;
+        while (m.find()) {
+            stringSens = m.group();
+            sens = Integer.parseInt(stringSens.substring(0, stringSens.length() - 2));
+        }
+        for (int i = 0; i < data.length; i++) {
+            data[i] = data[i] * sens;
+        }
+        return data;
     }
 
 
