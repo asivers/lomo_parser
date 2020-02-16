@@ -4,6 +4,39 @@ import java.util.List;
 
 public class MainClass {
     public static void main(String[] args) {
+        try {
+            File calibration = new File("./src/files/calibration.mdrs");
+            BufferedReader reader = new BufferedReader(new FileReader(calibration));
+            double[] calibrationData = new double[326];
+            String line;
+            for (int i = 0; i < 10; i++)
+                line = reader.readLine();
+            for (int i = 0; i < 326; i++) {
+                line = reader.readLine();
+                calibrationData[i] = Double.parseDouble(line.substring(4)) * 100;
+            }
+            for (int i = 0; i < 326; i++) {
+                System.out.println(calibrationData[i]);
+            }
+            File dirFrom = new File("./src/files/spectrometer");
+            File[] arrFiles = dirFrom.listFiles();
+            System.out.println(dirFrom);
+            for (int i = 0; i < arrFiles.length; i++)
+                System.out.println(arrFiles[i]);
+        }
+        catch (Exception e) { }
+    }
+}
+
+
+
+/*
+import java.io.*;
+        import java.util.Arrays;
+        import java.util.List;
+
+public class MainClass {
+    public static void main(String[] args) {
 
         // stringLength - длина строки, короче которой строки не будут записываться
 
@@ -57,3 +90,4 @@ public class MainClass {
         catch (Exception e) { }
     }
 }
+*/
