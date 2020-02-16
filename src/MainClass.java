@@ -7,12 +7,9 @@ import java.util.regex.Pattern;
 public class MainClass {
     public static void main(String[] args) {
         try {
-//            sensibilityAdj("1", new double[1]);
             String calibrationPath = "./src/files/calibration.mdrs";
             double[] calibrationData = getData(calibrationPath);
-//            for (int i = 0; i < 326; i++) {
-//                System.out.println(calibrationData[i]);
-//            }
+
             File data_only = new File("./src/data_only");
             data_only.mkdir();
             File calibrated = new File("./src/calibrated");
@@ -21,28 +18,20 @@ public class MainClass {
             File spectrometer = new File("./src/files/spectrometer");
             List<File> spectrometerFoldersList = Arrays.asList(spectrometer.listFiles());
             List<File> spectrometerFilesList;
+            String filePath;
             for (File folder : spectrometerFoldersList) {
+                new File("./src/data_only/" + folder.getName()).mkdir();
+                new File("./src/calibrated/" + folder.getName()).mkdir();
                 spectrometerFilesList = Arrays.asList(folder.listFiles());
                 for (File file : spectrometerFilesList) {
-                    System.out.println(file);
+                    filePath = file.getPath();
+                    double[] fileData = getData(filePath);
+                    writeData("./src/data_only/" + folder.getName() + "/" + file.getName(), fileData);
+                    writeData("./src/calibrated/" + folder.getName() + "/" + file.getName(), fileData);
                 }
             }
         }
         catch (Exception e) { }
-    }
-
-    public static double[] getData(String path) throws FileNotFoundException, IOException {
-        File calibration = new File(path);
-        BufferedReader reader = new BufferedReader(new FileReader(calibration));
-        double[] data = new double[326];
-        String line;
-        for (int i = 0; i < 10; i++)
-            line = reader.readLine();
-        for (int i = 0; i < 326; i++) {
-            line = reader.readLine();
-            data[i] = Double.parseDouble(line.substring(4));
-        }
-        return data;
     }
 
     public static double[] sensibilityAdj(String path, double[] data) {
@@ -58,6 +47,44 @@ public class MainClass {
         }
         return data;
     }
+
+    public static double[] getData(String path) throws IOException {
+        File calibration = new File(path);
+        BufferedReader reader = new BufferedReader(new FileReader(calibration));
+        double[] data = new double[326];
+        String line;
+        for (int i = 0; i < 10; i++)
+            line = reader.readLine();
+        for (int i = 0; i < 326; i++) {
+            line = reader.readLine();
+            data[i] = Double.parseDouble(line.substring(4));
+        }
+        return data;
+    }
+
+    public static void writeData(String path, double[] data) throws IOException {
+        File newFile = new File(path);
+        newFile.createNewFile();
+        FileWriter fStream = new FileWriter(path, true);
+        BufferedWriter out = new BufferedWriter(fStream);
+        for (int i = 0; i < data.length; i++)
+            out.write("" + data[i] + "\n");
+        out.flush();
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 //
 //    public static boolean find(String pattern, String str, boolean write, int lim) {
 //        List<String> allMatches = new ArrayList<>();
