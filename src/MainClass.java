@@ -8,7 +8,7 @@ public class MainClass {
     public static void main(String[] args) {
         try {
             String calibrationPath = "./src/files/calibration.mdrs";
-            double[] calibrationData = getData(calibrationPath);
+            double[] calibrationData = removeNoise(getData(calibrationPath));
 
             new File("./src/not_adjusted").mkdir();
             new File("./src/sensitivity_adjusted").mkdir();
@@ -27,11 +27,15 @@ public class MainClass {
                 spectrometerFilesList = Arrays.asList(folder.listFiles());
                 for (File file : spectrometerFilesList) {
                     fileName = file.getName();
+
                     double[] fileData = getData(file.getPath());
                     writeData("./src/not_adjusted/" + folderName + "/" + fileName, fileData);
+
                     double[] sensitivityAdjustedData = sensitivityAdj(fileName, removeNoise(fileData));
                     writeData("./src/sensitivity_adjusted/" + folderName + "/" + fileName, sensitivityAdjustedData);
-                    writeData("./src/spectrum_adjusted/" + folderName + "/" + fileName, sensitivityAdjustedData);
+
+                    double[] spectrumAdjustedData = spectrumAdj(sensitivityAdjustedData, calibrationData);
+                    writeData("./src/spectrum_adjusted/" + folderName + "/" + fileName, spectrumAdjustedData);
                 }
             }
         }
@@ -81,8 +85,14 @@ public class MainClass {
             sens = Integer.parseInt(stringSens.substring(0, stringSens.length() - 2));
         }
         for (int i = 0; i < data.length; i++) {
-            data[i] = data[i] * sens;
+            data[i] *= sens;
         }
+        return data;
+    }
+
+    public static double[] spectrumAdj(double[] data, double[] calibrationData) {
+        for (int i = 0; i < data.length; i++)
+            data[i] /= calibrationData[i];
         return data;
     }
 
